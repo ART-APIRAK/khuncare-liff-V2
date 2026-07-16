@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>KhunCare — ข้อมูลอาการเพิ่มเติม</title>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root {
+    --navy: #1A4A6E;
+    --navy-dark: #123650;
+    --green: #0E7C4A;
+    --green-light: #E6F4EC;
+    --ink: #1F2937;
+    --muted: #6B7280;
+    --line: #E5E7EB;
+    --bg: #F7F9FB;
+    --danger: #C0392B;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans Thai", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    background: linear-gradient(135deg, var(--navy), var(--navy-dark));
+    color: #fff;
+    padding: 24px 20px 20px;
+  }
+  header h1 { margin: 0 0 4px; font-size: 19px; font-weight: 700; }
+  header p { margin: 0; font-size: 13px; color: #AFCBE0; }
+  .chief-box {
+    margin-top: 14px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #DCEBF6;
+  }
+  main { padding: 18px 16px 100px; max-width: 480px; margin: 0 auto; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    font-size: 14px;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card .hint { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1.5px solid var(--line);
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s ease;
+  }
+  .chip.selected {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: var(--green);
+    font-weight: 600;
+  }
+  .option-row { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .option.selected { background: var(--green-light); border-color: var(--green); color: var(--green); font-weight: 600; }
+  .severity-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .severity-label { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  input[type="range"] { width: 100%; accent-color: var(--green); }
+  textarea {
+    width: 100%;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 70px;
+  }
+  .footer-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+  .footer-bar button {
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .footer-bar button:disabled { background: #A9C9BB; }
+  .status-msg { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .error-box {
+    display: none;
+    background: #FDECEA;
+    border: 1px solid #F5C6C0;
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px;
+    margin: 16px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 ข้อมูลอาการเพิ่มเติม</h1>
+  <p>ตอบให้ครบเพื่อให้ KhunCare ประเมินความเร่งด่วนได้แม่นยำขึ้น</p>
+  <div class="chief-box" id="chiefBox">อาการที่แจ้ง: —</div>
+</header>
+
+<div class="error-box" id="errorBox"></div>
+
+<main id="formArea" style="display:none">
+
+  <div class="card">
+    <h2>✅ อาการร่วม</h2>
+    <p class="hint">เลือกได้มากกว่า 1 ข้อ (ถ้าไม่มี ไม่ต้องเลือก)</p>
+    <div class="chip-group" id="assocChips"></div>
+  </div>
+
+  <div class="card">
+    <h2>⏱ เป็นมานานแค่ไหนแล้ว</h2>
+    <div class="option-row" id="durationOptions"></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 ความรุนแรง</h2>
+    <div class="severity-value" id="severityValue">5</div>
+    <div class="severity-label">0 = แทบไม่รู้สึก &nbsp;·&nbsp; 10 = รุนแรงที่สุด</div>
+    <input type="range" id="severitySlider" min="0" max="10" value="5">
+  </div>
+
+  <div class="card">
+    <h2>📈 อาการตอนนี้เป็นอย่างไร</h2>
+    <div class="option-row" id="progressionOptions"></div>
+  </div>
+
+  <div class="card">
+    <h2>💊 โรคประจำตัว / ยาที่ใช้อยู่</h2>
+    <p class="hint">ไม่บังคับ — กรอกถ้ามี</p>
+    <textarea id="medicalHistory" placeholder="เช่น เบาหวาน, ความดันสูง, ยาที่กินประจำ"></textarea>
+  </div>
+
+</main>
+
+<div class="footer-bar" id="footerBar" style="display:none">
+  <button id="submitBtn">ส่งข้อมูล</button>
+  <div class="status-msg" id="statusMsg"></div>
+</div>
+
+<script>
+// ==== ตั้งค่าตรงนี้ก่อนใช้งานจริง ====
+const LIFF_ID = '2010324907-i1YNmYe0';
+const SUBMIT_ENDPOINT = 'https://artggame.app.n8n.cloud/webhook-test/khuncare-liff-submit';
+// ======================================
+
+const ASSOC_OPTIONS = [
+  'มีไข้สูง', 'เจ็บหน้าอกเวลาไอ', 'หายใจมีเสียงหวีด',
+  'อาเจียนบ่อยจนกินน้ำไม่ได้', 'ปวดท้องรุนแรงเป็นจุดเดียว',
+  'ตาพร่ามัว / เห็นภาพซ้อน', 'ผื่นลามเร็ว', 'ใจสั่น เหงื่อออกมาก'
+];
+const DURATION_OPTIONS = ['น้อยกว่า 24 ชั่วโมง', '1-3 วัน', 'มากกว่า 3 วัน'];
+const PROGRESSION_OPTIONS = ['ดีขึ้นเรื่อยๆ', 'อาการเท่าเดิม', 'แย่ลงเรื่อยๆ'];
+
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get('session_id') || '';
+const submissionId = params.get('submission_id') || '';
+const symptoms = params.get('symptoms') || '';
+const originalMsg = params.get('msg') || '';
+
+let selectedAssoc = [];
+let selectedDuration = null;
+let selectedProgression = null;
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = '⚠️ ' + msg;
+  box.style.display = 'block';
+}
+
+function renderChips() {
+  const el = document.getElementById('assocChips');
+  ASSOC_OPTIONS.forEach(opt => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = opt;
+    chip.onclick = () => {
+      chip.classList.toggle('selected');
+      if (chip.classList.contains('selected')) selectedAssoc.push(opt);
+      else selectedAssoc = selectedAssoc.filter(o => o !== opt);
+    };
+    el.appendChild(chip);
+  });
+}
+
+function renderSingleSelect(containerId, options, onSelect) {
+  const el = document.getElementById(containerId);
+  options.forEach(opt => {
+    const row = document.createElement('div');
+    row.className = 'option';
+    row.textContent = opt;
+    row.onclick = () => {
+      [...el.children].forEach(c => c.classList.remove('selected'));
+      row.classList.add('selected');
+      onSelect(opt);
+    };
+    el.appendChild(row);
+  });
+}
+
+function init() {
+  document.getElementById('chiefBox').textContent =
+    'อาการที่แจ้ง: ' + (symptoms ? decodeURIComponent(symptoms).split(',').join(', ') : (originalMsg ? decodeURIComponent(originalMsg) : 'ไม่ระบุ'));
+
+  renderChips();
+  renderSingleSelect('durationOptions', DURATION_OPTIONS, v => selectedDuration = v);
+  renderSingleSelect('progressionOptions', PROGRESSION_OPTIONS, v => selectedProgression = v);
+
+  document.getElementById('severitySlider').addEventListener('input', e => {
+    document.getElementById('severityValue').textContent = e.target.value;
+  });
+
+  document.getElementById('formArea').style.display = 'block';
+  document.getElementById('footerBar').style.display = 'block';
+}
+
+async function submitForm() {
+  if (!selectedDuration) { setStatus('กรุณาเลือกระยะเวลาที่เป็นครับ'); return; }
+  if (!selectedProgression) { setStatus('กรุณาเลือกความคืบหน้าของอาการครับ'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  setStatus('กำลังส่งข้อมูล...');
+
+  const payload = {
+    session_id: sessionId,
+    user_id: sessionId,
+    submission_id: submissionId,
+    symptoms: symptoms,
+    msg: originalMsg,
+    associated_symptoms: selectedAssoc,
+    duration: selectedDuration,
+    severity: Number(document.getElementById('severitySlider').value),
+    progression: selectedProgression,
+    medical_history: document.getElementById('medicalHistory').value.trim()
+  };
+
+  try {
+    const res = await fetch(SUBMIT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('server error ' + res.status);
+    setStatus('ส่งข้อมูลสำเร็จ ✅ ระบบกำลังประมวลผล ผลจะแจ้งกลับใน LINE ครับ');
+    setTimeout(() => {
+      if (window.liff && liff.isInClient()) liff.closeWindow();
+    }, 1500);
+  } catch (err) {
+    btn.disabled = false;
+    setStatus('ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้งครับ');
+  }
+}
+
+function setStatus(msg) {
+  document.getElementById('statusMsg').textContent = msg;
+}
+
+document.getElementById('submitBtn') && (document.getElementById('submitBtn').onclick = submitForm);
+
+if (!sessionId || !submissionId) {
+  showError('ลิงก์นี้ไม่สมบูรณ์ กรุณากลับไปที่แชท KhunCare แล้วกดปุ่ม "กรอกข้อมูลเพิ่มเติม" อีกครั้ง');
+} else if (window.liff) {
+  liff.init({ liffId: LIFF_ID })
+    .then(() => init())
+    .catch(() => init()); // เผื่อทดสอบนอก LINE ก็ยังใช้งานฟอร์มได้
+} else {
+  init();
+}
+</script>
+</body>
+</html>
